@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Компания (Клиент)
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?  @unique
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  vacancies Vacancy[]
+
+  @@map("companies")
+}
+
+// Рекрутер
+model Recruiter {
+  id        String   @id @default(uuid())
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recruiterVacancies RecruiterVacancy[]
+
+  @@map("recruiters")
+}
+
+// Вакансия
+model Vacancy {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  deadline    DateTime?
+  companyId   String    @map("company_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiterVacancies RecruiterVacancy[]
+
+  @@map("vacancies")
+}
+
+// Стыковочная сущность: Вакансия, назначенная на рекрутера
+model RecruiterVacancy {
+  id              String   @id @default(uuid())
+  recruiterId     String   @map("recruiter_id")
+  vacancyId       String   @map("vacancy_id")
+  requiredResumes Int      @default(0) @map("required_resumes") // Количество необходимых резюме
+  sentResumes     Int      @default(0) @map("sent_resumes")     // Количество отправленных резюме
+  acceptedResumes Int      @default(0) @map("accepted_resumes") // Количество принятых резюме
+  rejectedResumes Int      @default(0) @map("rejected_resumes") // Количество отклоненных резюме
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  recruiter Recruiter @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+  vacancy   Vacancy   @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@unique([recruiterId, vacancyId])
+  @@map("recruiter_vacancies")
+}
