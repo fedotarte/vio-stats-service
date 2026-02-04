@@ -60,6 +60,19 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Нужно, чтобы достать docker-compose.prod.yml
+
+      - name: Copy docker-compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ vars.SERVER_PORT || 22 }}
+          source: "docker-compose.prod.yml"
+          target: "${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}"
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -69,17 +82,33 @@ jobs:
           port: ${{ vars.SERVER_PORT || 22 }}
           script: |
             set -e
-            cd ${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}
-            export PORT='${{ vars.PORT || '5001' }}'
-            export BASIC_AUTH_USERNAME='${{ secrets.BASIC_AUTH_USERNAME }}'
-            export BASIC_AUTH_PASSWORD='${{ secrets.BASIC_AUTH_PASSWORD }}'
-            export SWAGGER_ENABLED='${{ vars.SWAGGER_ENABLED || 'false' }}'
-            export DB_HOST='${{ vars.DB_HOST }}'
-            export DB_PORT='${{ vars.DB_PORT || '5432' }}'
-            export DB_USER='${{ vars.DB_USER }}'
-            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
-            export DB_NAME='${{ vars.DB_NAME }}'
-            export DOCKER_IMAGE='ghcr.io/${{ github.repository }}:latest'
+            DEPLOY_DIR="${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}"
+            
+            # Создаем папку, если её нет, и заходим
+            mkdir -p $DEPLOY_DIR
+            cd $DEPLOY_DIR
+
+            # Авторизация в GHCR (используем секрет, который ты создал)
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Записываем все переменные в .env файл прямо на сервере. 
+            # Это надежнее, чем экспорт в сессию.
+            cat <<EOF > .env
+            PORT=${{ vars.PORT || '5001' }}
+            BASIC_AUTH_USERNAME=${{ secrets.BASIC_AUTH_USERNAME }}
+            BASIC_AUTH_PASSWORD=${{ secrets.BASIC_AUTH_PASSWORD }}
+            SWAGGER_ENABLED=${{ vars.SWAGGER_ENABLED || 'false' }}
+            DB_HOST=${{ vars.DB_HOST }}
+            DB_PORT=${{ vars.DB_PORT || '5432' }}
+            DB_USER=${{ vars.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ vars.DB_NAME }}
+            DOCKER_IMAGE=ghcr.io/${{ github.repository }}:latest
+            EOF
+
+            # Подтягиваем образ и запускаем
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            
+            # Чистим старые образы
             docker image prune -f
