@@ -7,13 +7,13 @@
 #   SERVER_USER           — пользователь SSH
 #   SERVER_SSH_KEY        — приватный ключ SSH
 #   SERVER_PORT           — (опционально) порт SSH, по умолчанию 22
+#   BASIC_AUTH_USERNAME   — логин Basic Auth (по умолчанию admin)
 #   BASIC_AUTH_PASSWORD   — пароль Basic Auth
 #   DB_PASSWORD           — пароль БД
 #
 # Variables:
 #   DEPLOY_PATH           — путь на сервере (по умолчанию /opt/vio-stats-service)
 #   PORT                  — порт приложения (по умолчанию 5001)
-#   BASIC_AUTH_USERNAME   — логин Basic Auth (по умолчанию admin)
 #   SWAGGER_ENABLED       — true/false (по умолчанию false)
 #   DB_HOST               — хост БД (отдельный сервер)
 #   DB_PORT               — порт БД (по умолчанию 5432)
@@ -71,7 +71,7 @@ jobs:
             set -e
             cd ${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}
             export PORT='${{ vars.PORT || '5001' }}'
-            export BASIC_AUTH_USERNAME='${{ vars.BASIC_AUTH_USERNAME || 'admin' }}'
+            export BASIC_AUTH_USERNAME='${{ secrets.BASIC_AUTH_USERNAME }}'
             export BASIC_AUTH_PASSWORD='${{ secrets.BASIC_AUTH_PASSWORD }}'
             export SWAGGER_ENABLED='${{ vars.SWAGGER_ENABLED || 'false' }}'
             export DB_HOST='${{ vars.DB_HOST }}'
