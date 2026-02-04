@@ -89,7 +89,7 @@ jobs:
             cd $DEPLOY_DIR
 
             # Авторизация в GHCR (используем секрет, который ты создал)
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Записываем все переменные в .env файл прямо на сервере. 
             # Это надежнее, чем экспорт в сессию.
