@@ -31,7 +31,7 @@ model Recruiter {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  recruiterVacancies RecruiterVacancy[]
+  recruiterVacancies Assignment[]
 
   @@map("recruiters")
 }
@@ -46,19 +46,19 @@ model Vacancy {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  recruiterVacancies RecruiterVacancy[]
+  company            Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  recruiterVacancies Assignment[]
 
   @@map("vacancies")
 }
 
 // Стыковочная сущность: Вакансия, назначенная на рекрутера
-model RecruiterVacancy {
+model Assignment {
   id              String   @id @default(uuid())
   recruiterId     String   @map("recruiter_id")
   vacancyId       String   @map("vacancy_id")
   requiredResumes Int      @default(0) @map("required_resumes") // Количество необходимых резюме
-  sentResumes     Int      @default(0) @map("sent_resumes")     // Количество отправленных резюме
+  sentResumes     Int      @default(0) @map("sent_resumes") // Количество отправленных резюме
   acceptedResumes Int      @default(0) @map("accepted_resumes") // Количество принятых резюме
   rejectedResumes Int      @default(0) @map("rejected_resumes") // Количество отклоненных резюме
   createdAt       DateTime @default(now()) @map("created_at")
@@ -68,5 +68,5 @@ model RecruiterVacancy {
   vacancy   Vacancy   @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
 
   @@unique([recruiterId, vacancyId])
-  @@map("recruiter_vacancies")
+  @@map("assignments")
 }

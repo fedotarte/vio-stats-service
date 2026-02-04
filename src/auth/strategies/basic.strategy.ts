@@ -7,7 +7,7 @@ export class BasicStrategy extends PassportStrategy(Strategy) {
   constructor() {
     super();
   }
-
+  // eslint-disable-next-line @typescript-eslint/require-await
   async validate(username: string, password: string): Promise<boolean> {
     const validUsername = process.env.BASIC_AUTH_USERNAME;
     const validPassword = process.env.BASIC_AUTH_PASSWORD;

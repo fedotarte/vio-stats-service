@@ -31,6 +31,52 @@
 $ npm install
 ```
 
+## Environment
+
+Create `.env` with database and runtime settings:
+
+```
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=vio_stats
+
+SWAGGER_ENABLED=true
+```
+
+Notes:
+- The Nest app reads `process.env` at runtime. `ConfigModule` loads `.env` into `process.env` for the app.
+- Prisma CLI uses `prisma.config.ts` (which imports `dotenv/config`) and reads the same env vars. `ConfigModule` is not used by Prisma CLI.
+
+## Prisma (migrations)
+
+Generate client:
+
+```bash
+$ npx prisma generate
+```
+
+Create/apply a migration during development (requires DB connection):
+
+```bash
+$ npx prisma migrate dev --name <migration_name>
+```
+
+Reset DB and reapply all migrations (DEV only, deletes data):
+
+```bash
+$ npx prisma migrate reset --force
+```
+
+Production deploy (apply existing migrations only):
+
+```bash
+$ npx prisma migrate deploy
+```
+
+Automigration in prod is not recommended; use `migrate deploy` as part of release.
+
 ## Compile and run the project
 
 ```bash

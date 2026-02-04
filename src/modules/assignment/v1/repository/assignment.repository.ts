@@ -8,7 +8,7 @@ export class AssignmentRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateAssignmentDto) {
-    return this.prisma.recruiterVacancy.create({
+    return this.prisma.assignment.create({
       data: {
         recruiterId: data.recruiterId,
         vacancyId: data.vacancyId,
@@ -22,7 +22,7 @@ export class AssignmentRepository {
   }
 
   async findAll() {
-    return this.prisma.recruiterVacancy.findMany({
+    return this.prisma.assignment.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         recruiter: true,
@@ -32,7 +32,7 @@ export class AssignmentRepository {
   }
 
   async findById(id: string) {
-    return this.prisma.recruiterVacancy.findUnique({
+    return this.prisma.assignment.findUnique({
       where: { id },
       include: {
         recruiter: true,
@@ -42,7 +42,7 @@ export class AssignmentRepository {
   }
 
   async findByRecruiterId(recruiterId: string) {
-    return this.prisma.recruiterVacancy.findMany({
+    return this.prisma.assignment.findMany({
       where: { recruiterId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -53,7 +53,7 @@ export class AssignmentRepository {
   }
 
   async findByVacancyId(vacancyId: string) {
-    return this.prisma.recruiterVacancy.findMany({
+    return this.prisma.assignment.findMany({
       where: { vacancyId },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -64,7 +64,7 @@ export class AssignmentRepository {
   }
 
   async findByRecruiterAndVacancy(recruiterId: string, vacancyId: string) {
-    return this.prisma.recruiterVacancy.findUnique({
+    return this.prisma.assignment.findUnique({
       where: {
         recruiterId_vacancyId: { recruiterId, vacancyId },
       },
@@ -76,7 +76,7 @@ export class AssignmentRepository {
   }
 
   async update(id: string, data: UpdateAssignmentDto) {
-    return this.prisma.recruiterVacancy.update({
+    return this.prisma.assignment.update({
       where: { id },
       data,
       include: {
@@ -87,7 +87,7 @@ export class AssignmentRepository {
   }
 
   async incrementSentResumes(id: string, count: number = 1) {
-    return this.prisma.recruiterVacancy.update({
+    return this.prisma.assignment.update({
       where: { id },
       data: { sentResumes: { increment: count } },
       include: {
@@ -98,7 +98,7 @@ export class AssignmentRepository {
   }
 
   async incrementAcceptedResumes(id: string, count: number = 1) {
-    return this.prisma.recruiterVacancy.update({
+    return this.prisma.assignment.update({
       where: { id },
       data: { acceptedResumes: { increment: count } },
       include: {
@@ -109,7 +109,7 @@ export class AssignmentRepository {
   }
 
   async incrementRejectedResumes(id: string, count: number = 1) {
-    return this.prisma.recruiterVacancy.update({
+    return this.prisma.assignment.update({
       where: { id },
       data: { rejectedResumes: { increment: count } },
       include: {
@@ -120,7 +120,7 @@ export class AssignmentRepository {
   }
 
   async delete(id: string) {
-    return this.prisma.recruiterVacancy.delete({
+    return this.prisma.assignment.delete({
       where: { id },
     });
   }

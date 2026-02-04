@@ -1,9 +1,9 @@
-# Production: БД и конфиг задаются в .env (или через GitHub Actions secrets/vars)
+# Production: только образ из GHCR, без сборки. БД на отдельном сервере.
+# DOCKER_IMAGE задаётся при деплое (например ghcr.io/owner/repo:latest).
+# Используется на сервере: docker compose -f docker-compose.prod.yml pull && up -d
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE:-ghcr.io/fedotarte/vio-stats-service:latest}
     container_name: vio-stats-app
     restart: unless-stopped
     environment:

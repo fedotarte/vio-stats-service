@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AssignedRecruiterDto } from './assigned-recruiter.dto';
-import { RecruiterVacancyEntity } from '../entities/recruiter-vacancy.entity';
+import { AssignmentEntity } from '../entities/assignment.entity';
 import { AssignedVacancyDto } from './assigned-vacancy.dto';
 
-export class AssignedVacancyRecruiterDto extends RecruiterVacancyEntity {
+export class AssignedVacancyRecruiterDto extends AssignmentEntity {
   @ApiProperty({ type: () => AssignedRecruiterDto })
   recruiter: AssignedRecruiterDto;
 

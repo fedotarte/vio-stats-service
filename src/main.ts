@@ -45,7 +45,12 @@ async function bootstrap() {
   }
 
   // CORS
-  app.enableCors({ credentials: true });
+  app.enableCors({
+    credentials: true,
+    origin: process.env.CORS_ORIGIN || true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  });
 
   const port = process.env.PORT || 5001;
   await app.listen(port, '0.0.0.0');
@@ -55,5 +60,5 @@ async function bootstrap() {
     console.log(`📚 Swagger documentation: http://localhost:${port}/api-docs`);
   }
 }
-
+//eslint-disable-next-line @typescript-eslint/no-floating-promises
 bootstrap();

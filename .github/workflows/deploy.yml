@@ -1,71 +1,85 @@
-# Деплой: env подставляются из GitHub Secrets и Variables.
+# Build и деплой: образ пушится в GHCR, на сервере только pull и up.
+# БД на отдельном сервере — подставляется через DB_HOST и остальные переменные.
 #
-# В репозитории (Settings → Secrets and variables → Actions) задай:
+# Secrets (Settings → Secrets and variables → Actions):
+#   GH_TOKEN              — PAT с scope read:packages, write:packages (для пуша в GHCR)
+#   SERVER_HOST           — хост сервера
+#   SERVER_USER           — пользователь SSH
+#   SERVER_SSH_KEY        — приватный ключ SSH
+#   SERVER_PORT           — (опционально) порт SSH, по умолчанию 22
+#   BASIC_AUTH_PASSWORD   — пароль Basic Auth
+#   DB_PASSWORD           — пароль БД
 #
-# Secrets (обязательно):
-#   BASIC_AUTH_PASSWORD  — пароль Basic Auth
-#   DB_PASSWORD          — пароль БД
-#   SSH_PRIVATE_KEY      — приватный ключ для SSH на сервер
-#   SSH_HOST             — хост сервера (например abudbalnapfiey.beget.app или IP)
-#   SSH_USER             — пользователь SSH (например deploy или root)
-#
-# Variables (обязательные для БД: DB_HOST, DB_USER, DB_NAME; остальные — по умолчанию):
-#   DEPLOY_PATH          — путь к проекту на сервере (по умолчанию /opt/vio-stats-service)
-#   PORT                 — порт приложения (по умолчанию 5001)
-#   BASIC_AUTH_USERNAME  — логин Basic Auth (по умолчанию admin)
-#   SWAGGER_ENABLED      — включить Swagger (true/false, по умолчанию false)
-#   DB_HOST              — хост БД
-#   DB_PORT              — порт БД (по умолчанию 5432)
-#   DB_USER              — пользователь БД
-#   DB_NAME              — имя БД
+# Variables:
+#   DEPLOY_PATH           — путь на сервере (по умолчанию /opt/vio-stats-service)
+#   PORT                  — порт приложения (по умолчанию 5001)
+#   BASIC_AUTH_USERNAME   — логин Basic Auth (по умолчанию admin)
+#   SWAGGER_ENABLED       — true/false (по умолчанию false)
+#   DB_HOST               — хост БД (отдельный сервер)
+#   DB_PORT               — порт БД (по умолчанию 5432)
+#   DB_USER               — пользователь БД
+#   DB_NAME               — имя БД
 
-name: Deploy
+name: build-and-deploy
 
 on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new \
-            "$SSH_USER@$SSH_HOST" "
-            cd $DEPLOY_PATH && \
-            export PORT='$PORT' && \
-            export BASIC_AUTH_USERNAME='$BASIC_AUTH_USERNAME' && \
-            export BASIC_AUTH_PASSWORD='$BASIC_AUTH_PASSWORD' && \
-            export SWAGGER_ENABLED='$SWAGGER_ENABLED' && \
-            export DB_HOST='$DB_HOST' && \
-            export DB_PORT='$DB_PORT' && \
-            export DB_USER='$DB_USER' && \
-            export DB_PASSWORD='$DB_PASSWORD' && \
-            export DB_NAME='$DB_NAME' && \
-            docker compose pull && \
-            docker compose up -d
-          "
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}
-          PORT: ${{ vars.PORT || '5001' }}
-          BASIC_AUTH_USERNAME: ${{ vars.BASIC_AUTH_USERNAME || 'admin' }}
-          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
-          SWAGGER_ENABLED: ${{ vars.SWAGGER_ENABLED || 'false' }}
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PORT: ${{ vars.DB_PORT || '5432' }}
-          DB_USER: ${{ vars.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ vars.DB_NAME }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GH_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ vars.SERVER_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}
+            export PORT='${{ vars.PORT || '5001' }}'
+            export BASIC_AUTH_USERNAME='${{ vars.BASIC_AUTH_USERNAME || 'admin' }}'
+            export BASIC_AUTH_PASSWORD='${{ secrets.BASIC_AUTH_PASSWORD }}'
+            export SWAGGER_ENABLED='${{ vars.SWAGGER_ENABLED || 'false' }}'
+            export DB_HOST='${{ vars.DB_HOST }}'
+            export DB_PORT='${{ vars.DB_PORT || '5432' }}'
+            export DB_USER='${{ vars.DB_USER }}'
+            export DB_PASSWORD='${{ secrets.DB_PASSWORD }}'
+            export DB_NAME='${{ vars.DB_NAME }}'
+            export DOCKER_IMAGE='ghcr.io/${{ github.repository }}:latest'
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f

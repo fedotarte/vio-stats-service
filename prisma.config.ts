@@ -3,6 +3,14 @@
 import 'dotenv/config';
 import { defineConfig } from 'prisma/config';
 
+const host = process.env.DB_HOST;
+const port = process.env.DB_PORT || '5432';
+const user = process.env.DB_USER;
+const password = process.env.DB_PASSWORD;
+const database = process.env.DB_NAME;
+
+const databaseUrl = `postgresql://${user}:${password}@${host}:${port}/${database}`;
+
 // eslint-disable-next-line @typescript-eslint/no-unsafe-call
 export default defineConfig({
   schema: 'src/prisma/schema.prisma',
@@ -10,6 +18,6 @@ export default defineConfig({
     path: 'src/prisma/migrations',
   },
   datasource: {
-    url: process.env['DATABASE_URL'],
+    url: databaseUrl,
   },
 });
