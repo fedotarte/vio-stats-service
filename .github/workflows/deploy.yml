@@ -1,0 +1,71 @@
+# Деплой: env подставляются из GitHub Secrets и Variables.
+#
+# В репозитории (Settings → Secrets and variables → Actions) задай:
+#
+# Secrets (обязательно):
+#   BASIC_AUTH_PASSWORD  — пароль Basic Auth
+#   DB_PASSWORD          — пароль БД
+#   SSH_PRIVATE_KEY      — приватный ключ для SSH на сервер
+#   SSH_HOST             — хост сервера (например abudbalnapfiey.beget.app или IP)
+#   SSH_USER             — пользователь SSH (например deploy или root)
+#
+# Variables (обязательные для БД: DB_HOST, DB_USER, DB_NAME; остальные — по умолчанию):
+#   DEPLOY_PATH          — путь к проекту на сервере (по умолчанию /opt/vio-stats-service)
+#   PORT                 — порт приложения (по умолчанию 5001)
+#   BASIC_AUTH_USERNAME  — логин Basic Auth (по умолчанию admin)
+#   SWAGGER_ENABLED      — включить Swagger (true/false, по умолчанию false)
+#   DB_HOST              — хост БД
+#   DB_PORT              — порт БД (по умолчанию 5432)
+#   DB_USER              — пользователь БД
+#   DB_NAME              — имя БД
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
+      - name: Deploy via SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new \
+            "$SSH_USER@$SSH_HOST" "
+            cd $DEPLOY_PATH && \
+            export PORT='$PORT' && \
+            export BASIC_AUTH_USERNAME='$BASIC_AUTH_USERNAME' && \
+            export BASIC_AUTH_PASSWORD='$BASIC_AUTH_PASSWORD' && \
+            export SWAGGER_ENABLED='$SWAGGER_ENABLED' && \
+            export DB_HOST='$DB_HOST' && \
+            export DB_PORT='$DB_PORT' && \
+            export DB_USER='$DB_USER' && \
+            export DB_PASSWORD='$DB_PASSWORD' && \
+            export DB_NAME='$DB_NAME' && \
+            docker compose pull && \
+            docker compose up -d
+          "
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/vio-stats-service' }}
+          PORT: ${{ vars.PORT || '5001' }}
+          BASIC_AUTH_USERNAME: ${{ vars.BASIC_AUTH_USERNAME || 'admin' }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          SWAGGER_ENABLED: ${{ vars.SWAGGER_ENABLED || 'false' }}
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT || '5432' }}
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ vars.DB_NAME }}

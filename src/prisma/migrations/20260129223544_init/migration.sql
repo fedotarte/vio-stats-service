@@ -38,7 +38,7 @@ CREATE TABLE "vacancies" (
 );
 
 -- CreateTable
-CREATE TABLE "recruiter_vacancies" (
+CREATE TABLE "assignments" (
     "id" TEXT NOT NULL,
     "recruiter_id" TEXT NOT NULL,
     "vacancy_id" TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE "recruiter_vacancies" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "recruiter_vacancies_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "assignments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -59,13 +59,13 @@ CREATE UNIQUE INDEX "companies_email_key" ON "companies"("email");
 CREATE UNIQUE INDEX "recruiters_email_key" ON "recruiters"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "recruiter_vacancies_recruiter_id_vacancy_id_key" ON "recruiter_vacancies"("recruiter_id", "vacancy_id");
+CREATE UNIQUE INDEX "assignments_recruiter_id_vacancy_id_key" ON "assignments"("recruiter_id", "vacancy_id");
 
 -- AddForeignKey
 ALTER TABLE "vacancies" ADD CONSTRAINT "vacancies_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "recruiter_vacancies" ADD CONSTRAINT "recruiter_vacancies_recruiter_id_fkey" FOREIGN KEY ("recruiter_id") REFERENCES "recruiters"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "assignments" ADD CONSTRAINT "assignments_recruiter_id_fkey" FOREIGN KEY ("recruiter_id") REFERENCES "recruiters"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "recruiter_vacancies" ADD CONSTRAINT "recruiter_vacancies_vacancy_id_fkey" FOREIGN KEY ("vacancy_id") REFERENCES "vacancies"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "assignments" ADD CONSTRAINT "assignments_vacancy_id_fkey" FOREIGN KEY ("vacancy_id") REFERENCES "vacancies"("id") ON DELETE CASCADE ON UPDATE CASCADE;

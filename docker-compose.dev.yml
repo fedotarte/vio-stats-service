@@ -1,0 +1,31 @@
+# Локальная разработка: поднимает Postgres + приложение.
+# Запуск: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# DATABASE_URL переопределяется на контейнер postgres.
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: vio-stats-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespw}
+      POSTGRES_DB: ${POSTGRES_DB:-vio_stats}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-vio_stats}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespw}@postgres:5432/${POSTGRES_DB:-vio_stats}
+
+volumes:
+  postgres_data:
