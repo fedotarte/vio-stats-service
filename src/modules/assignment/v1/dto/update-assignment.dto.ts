@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import { IsInt, Min, IsOptional } from 'class-validator';
+import { normalizeOptionalNumber } from '../../../dto-transforms';
 
 export class UpdateAssignmentDto {
   @ApiProperty({
@@ -7,6 +9,8 @@ export class UpdateAssignmentDto {
     example: 10,
     required: false,
   })
+  @Transform(normalizeOptionalNumber)
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -17,6 +21,8 @@ export class UpdateAssignmentDto {
     example: 5,
     required: false,
   })
+  @Transform(normalizeOptionalNumber)
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -27,6 +33,8 @@ export class UpdateAssignmentDto {
     example: 3,
     required: false,
   })
+  @Transform(normalizeOptionalNumber)
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -37,6 +45,8 @@ export class UpdateAssignmentDto {
     example: 2,
     required: false,
   })
+  @Transform(normalizeOptionalNumber)
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @Min(0)

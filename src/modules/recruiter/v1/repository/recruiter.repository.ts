@@ -11,8 +11,34 @@ export class RecruiterRepository {
     return this.prisma.recruiter.create({ data });
   }
 
-  async findAll() {
+  async findAll(search?: string) {
+    const normalizedSearch = search?.trim();
+
     return this.prisma.recruiter.findMany({
+      where: normalizedSearch
+        ? {
+            OR: [
+              {
+                firstName: {
+                  contains: normalizedSearch,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                lastName: {
+                  contains: normalizedSearch,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                email: {
+                  contains: normalizedSearch,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          }
+        : undefined,
       orderBy: { createdAt: 'desc' },
     });
   }

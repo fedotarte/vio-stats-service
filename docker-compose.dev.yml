@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgrespw}
       POSTGRES_DB: ${POSTGRES_DB:-vio_stats}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-55000}:55000"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
@@ -20,12 +20,12 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespw}@postgres:5432/${POSTGRES_DB:-vio_stats}
+#  app:
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    environment:
+#      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgrespw}@postgres:5432/${POSTGRES_DB:-vio_stats}
 
 volumes:
   postgres_data:

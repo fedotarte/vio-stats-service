@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsString, IsOptional, IsUUID, IsDateString } from 'class-validator';
+import { normalizeOptionalString } from '../../../dto-transforms';
 
 export class CreateVacancyDto {
   @ApiProperty({
@@ -14,6 +16,7 @@ export class CreateVacancyDto {
     example: 'Разработка backend сервисов на Node.js',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsString()
   description?: string;
@@ -23,6 +26,7 @@ export class CreateVacancyDto {
     example: '2026-03-01T00:00:00.000Z',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsDateString()
   deadline?: string;

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsString, IsEmail, IsOptional } from 'class-validator';
+import { normalizeOptionalString } from '../../../dto-transforms';
 
 export class CreateRecruiterDto {
   @ApiProperty({ description: 'Имя рекрутера', example: 'Иван' })
@@ -11,6 +13,7 @@ export class CreateRecruiterDto {
   lastName: string;
 
   @ApiProperty({ description: 'Email рекрутера', example: 'ivan@company.com' })
+  @Transform(normalizeOptionalString)
   @IsEmail()
   email: string;
 
@@ -19,6 +22,7 @@ export class CreateRecruiterDto {
     example: '+7 999 123 45 67',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsString()
   phone?: string;

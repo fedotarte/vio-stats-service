@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsString, IsOptional, IsEmail } from 'class-validator';
+import { normalizeOptionalString } from '../../../dto-transforms';
 
 export class CreateCompanyDto {
   @ApiProperty({
@@ -14,6 +16,7 @@ export class CreateCompanyDto {
     example: 'info@company.com',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsEmail()
   email?: string;
@@ -23,6 +26,7 @@ export class CreateCompanyDto {
     example: '+7 999 999 99 99',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsString()
   phone?: string;
@@ -32,6 +36,7 @@ export class CreateCompanyDto {
     example: 'г. Москва, ул. Ленина, д. 1',
     required: false,
   })
+  @Transform(normalizeOptionalString)
   @IsOptional()
   @IsString()
   address?: string;

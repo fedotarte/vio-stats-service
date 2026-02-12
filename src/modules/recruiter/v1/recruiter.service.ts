@@ -11,8 +11,8 @@ export class RecruiterService {
     return this.recruiterRepository.create(dto);
   }
 
-  async findAll() {
-    return this.recruiterRepository.findAll();
+  async findAll(search?: string) {
+    return this.recruiterRepository.findAll(search);
   }
 
   async findById(id: string) {

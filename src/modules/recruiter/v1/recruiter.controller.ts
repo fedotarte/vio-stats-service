@@ -6,10 +6,17 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { RecruiterService } from './recruiter.service';
 import { CreateRecruiterDto } from './dto/create-recruiter.dto';
 import { UpdateRecruiterDto } from './dto/update-recruiter.dto';
@@ -33,13 +40,18 @@ export class RecruiterController {
 
   @Get()
   @ApiOperation({ summary: 'Получить список всех рекрутеров' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Поиск по имени, фамилии или email',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Список рекрутеров',
     type: [RecruiterEntity],
   })
-  async findAll() {
-    return this.recruiterService.findAll();
+  async findAll(@Query('search') search?: string) {
+    return this.recruiterService.findAll(search);
   }
 
   @Get(':id')

@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import { IsEnum, IsInt, Min, IsOptional } from 'class-validator';
+import { normalizeOptionalNumber } from '../../../dto-transforms';
 
 export enum ResumeAction {
   SENT = 'sent',
@@ -21,6 +23,8 @@ export class UpdateResumeStatsDto {
     example: 1,
     default: 1,
   })
+  @Transform(normalizeOptionalNumber)
+  @Type(() => Number)
   @IsOptional()
   @IsInt()
   @Min(1)
